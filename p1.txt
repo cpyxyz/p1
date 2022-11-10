@@ -1,0 +1,76 @@
+create table musician (ssn varchar(5) primary key, name varchar(20), address varchar(30), phone bigint(10));
+
+create table album (aid varchar(5) primary key, name varchar(20), copyright varchar(10), no_of_songs int(3));
+
+create table song (sid varchar(5) primary key, name varchar(20), author varchar(10), aid varchar(5), foreign key(aid) references album(aid));
+
+create table instrument (iid varchar(5) primary key, name varchar(10));
+
+create table play (ssn varchar(5), iid varchar(5), foreign key(ssn) references musician(ssn), foreign key(iid) references instrument(iid), primary key(ssn,iid));
+
+create table perform (ssn varchar(5), sid varchar(5), foreign key(ssn) references musician(ssn), foreign key(sid) references song(sid), primary key(ssn,sid));
+
+
+insert into musician (ssn, name, address, phone) values('m01', 'mgk', 'bengaluru', 9883384932);
+insert into musician (ssn, name, address, phone) values('m02', 'anp', 'bengaluru', 9883383232);
+insert into musician (ssn, name, address, phone) values('m03', 'som', 'bengaluru', 9883387432);
+insert into musician (ssn, name, address, phone) values('m04', 'kt', 'bengaluru', 9883387873);
+insert into musician (ssn, name, address, phone) values('m05', 'vik', 'bengaluru', 9883387124);
+
+
+insert into album (aid, name, copyright, no_of_songs, ssn) values('a01', 'bayan', 'sony', 3, 'm01');
+insert into album (aid, name, copyright, no_of_songs, ssn) values('a02', 'nayab', 'sony', 2, 'm02');
+insert into album (aid, name, copyright, no_of_songs, ssn) values('a03', 'divide', 'sony', 2, 'm03');
+insert into album (aid, name, copyright, no_of_songs, ssn) values('a04', 'minus', 'sony', 2, 'm01');
+
+
+insert into song (sid, name, author, aid) values ('s01', 'song1', 'mgk', 'a01'); 
+insert into song (sid, name, author, aid) values ('s02', 'song2', 'anp', 'a02');
+insert into song (sid, name, author, aid) values ('s03', 'song3', 'som', 'a03');
+
+
+insert into instrument (iid, name) values('i01', 'guitar');
+insert into instrument (iid, name) values('i02', 'violin');
+insert into instrument (iid, name) values('i03', 'veena');
+insert into instrument (iid, name) values('i04', 'sitar');
+insert into instrument (iid, name) values('i05', 'flute');
+
+
+insert into play (ssn, iid) values('m01', 'i01');
+insert into play (ssn, iid) values('m02', 'i02');
+insert into play (ssn, iid) values('m03', 'i03');
+insert into play (ssn, iid) values('m01', 'i02');
+insert into play (ssn, iid) values('m01', 'i03');
+insert into play (ssn, iid) values('m01', 'i04');
+insert into play (ssn, iid) values('m01', 'i05');
+
+
+insert into perform (ssn, sid) values('m01', 's01');
+insert into perform (ssn, sid) values('m02', 's01');
+insert into perform (ssn, sid) values('m03', 's01');
+insert into perform (ssn, sid) values('m04', 's01');
+insert into perform (ssn, sid) values('m01', 's02');
+insert into perform (ssn, sid) values('m02', 's03');
+
+
+-----------------------------------------------------
+1.1
+select m.name, s.name, a.name from musician m, song s, album a, perform p where m.ssn = p.ssn and s.sid = p.sid and s.aid = a.aid;
+
+1.2
+select m.name from musician m where m.ssn not in (select ssn from album);
+
+1.3
+select s.name from song s, musician m, perform p where m.ssn = p.ssn and p.sid = s.sid group by s.name having count(s.name)>3;
+
+1.4
+select i.name,count(i.iid), count(i.iid)/(select count(ssn) from musician) as average from instrument i, musician m, play p where m.ssn = p.ssn and p.iid = i.iid group by i.name;
+
+1.5
+select a.name from album a, instrument i, play p where p.ssn = a.ssn and i.iid = p.iid and i.name = 'flute' and exists (select a.name from album a, instrument i, play p where p.ssn = a.ssn and i.iid = p.iid and i.name = 'guitar') and a.ssn in (select ssn from album where no_of_songs >= (select avg(no_of_songs) from album));
+
+1.6
+select p.ssn, count(p.ssn) from play p group by p.ssn having count(p.ssn) = (select count(*) from instrument);
+
+
+
